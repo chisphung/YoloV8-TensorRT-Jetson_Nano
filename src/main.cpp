@@ -57,16 +57,18 @@ int main(int argc, char** argv)
 
     cout << "Capturing from camera index " << camera_index << endl;
 
-    while(1){
-        cap >> image;
-        if (image.empty()) {
-            cerr << "ERROR: Unable to grab from the camera" << endl;
+    while (true) {
+        if (!cap.read(image)) {
+            cerr << "ERROR: Unable to grab frame from the camera" << endl;
             break;
+        }
+        if (image.empty()) {
+            cerr << "WARNING: Skipping empty frame from the camera" << endl;
+            continue;
         }
         yolov8->CopyFromMat(image, im_size);
 
         std::vector<Object> objs;
-
         Tbegin = std::chrono::steady_clock::now();
         yolov8->Infer();
         Tend = std::chrono::steady_clock::now();
