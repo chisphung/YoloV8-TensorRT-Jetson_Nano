@@ -6,11 +6,10 @@
 #include "chrono"
 #include "opencv2/opencv.hpp"
 #include "yolov8.hpp"
+#include <cstdlib>
 
 using namespace std;
 using namespace cv;
-
-//#define VIDEO
 
 cv::Size       im_size(640, 640);
 const int      num_labels  = 80;
@@ -26,12 +25,15 @@ int main(int argc, char** argv)
     cv::Mat  image;
     std::chrono::steady_clock::time_point Tbegin, Tend;
 
-    if (argc < 3) {
-        fprintf(stderr,"Usage: ./YoloV8_RT [model_trt.engine] [image or video path] \n");
+    if (argc < 2) {
+        fprintf(stderr,"Usage: ./YoloV8_RT [model_trt.engine] [camera_id optional]\n");
         return -1;
     }
     const string engine_file_path = argv[1];
-    const string imagepath = argv[2];
+    int camera_index = 0;
+    if (argc >= 3) {
+        camera_index = std::atoi(argv[2]);
+    }
 
     for(i=0;i<16;i++) FPS[i]=0.0;
 
@@ -47,24 +49,20 @@ int main(int argc, char** argv)
     cout << endl;
     yolov8->MakePipe(true);
 
-#ifdef VIDEO
-    VideoCapture cap(imagepath);
+    VideoCapture cap(camera_index);
     if (!cap.isOpened()) {
-        cerr << "ERROR: Unable to open the stream " << imagepath << endl;
-        return 0;
+        cerr << "ERROR: Unable to open the camera with index " << camera_index << endl;
+        return -1;
     }
-#endif // VIDEO
+
+    cout << "Capturing from camera index " << camera_index << endl;
 
     while(1){
-#ifdef VIDEO
         cap >> image;
         if (image.empty()) {
             cerr << "ERROR: Unable to grab from the camera" << endl;
             break;
         }
-#else
-        image = cv::imread(imagepath);
-#endif
         yolov8->CopyFromMat(image, im_size);
 
         std::vector<Object> objs;
