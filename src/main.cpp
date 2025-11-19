@@ -62,8 +62,9 @@ int main(int argc, char** argv)
             cerr << "ERROR: Unable to grab frame from the camera" << endl;
             break;
         }
-        if (image.empty()) {
-            cerr << "WARNING: Skipping empty frame from the camera" << endl;
+        if (image.empty() || image.cols <= 0 || image.rows <= 0) {
+            cerr << "WARNING: Skipping invalid frame from the camera (" << image.cols
+                 << "x" << image.rows << ")" << endl;
             continue;
         }
         yolov8->CopyFromMat(image, im_size);
